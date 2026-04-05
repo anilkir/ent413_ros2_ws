@@ -1,0 +1,36 @@
+frames:
+  - parent_frame: world
+    child_frame: industrial_base
+    translation:
+      x: 0.9
+      y: 0.0
+      z: 0.0
+    rotation_rpy:
+      a: 0.0
+      b: 0.0
+      c: 0.0
+    angles_in_degrees: true
+
+  - parent_frame: industrial_base
+    child_frame: workpiece_frame
+    translation:
+      x: 0.0
+      y: 0.0
+      z: 0.5
+    rotation_rpy:
+      a: 0.0
+      b: 0.0
+      c: -90.0
+    angles_in_degrees: true
+
+  - parent_frame: welding_table_link
+    child_frame: table_top_corner
+    translation:
+      x: 0.077871
+      y: 0.204821
+      z: 0.464500
+    rotation_rpy:
+      a: 0.0
+      b: 0.0
+      c: 0.0
+    angles_in_degrees: true

@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="welding_robot">
-  <xacro:arg name="add_ros2_control" default="false"/>
+  <xacro:arg name="initial_positions_file" default="$(find welding_robot_moveit_config)/config/initial_positions.yaml"/>
   <xacro:arg name="ros2_control_hardware_type" default="mock_components"/>
-  <xacro:arg name="initial_positions_file" default=""/>
 
   <xacro:include filename="$(find welding_robot_description)/urdf/welding_robot_macro.xacro"/>
 
   <xacro:welding_robot
-      add_ros2_control="$(arg add_ros2_control)"
+      add_ros2_control="true"
       ros2_control_hardware_type="$(arg ros2_control_hardware_type)"
       initial_positions_file="$(arg initial_positions_file)"/>
 </robot>

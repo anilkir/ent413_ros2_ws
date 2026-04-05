@@ -1,0 +1,293 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="welding_robot">
+  <xacro:macro name="welding_robot" params="
+      add_ros2_control:=false
+      ros2_control_hardware_type:=mock_components
+      initial_positions_file:=''">
+    <!-- Reusable Franka macro -->
+    <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
+
+    <!-- Optional fixed world frame -->
+    <link name="world"/>
+
+    <!-- Instantiate FR3 without gripper -->
+    <xacro:franka_robot
+        robot_type="fr3"
+        joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"
+        inertials="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}"
+        kinematics="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}"
+        accelerometer_config="${xacro.load_yaml('$(find franka_description)/robots/fr3/accelerometers.yaml')}"
+        dynamics="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}"
+        gazebo="false"
+        hand="false"
+        ee_id="franka_hand"
+        special_connection=""
+        xyz_ee="0 0 0"
+        rpy_ee="0 0 ${-pi/4}"
+        tcp_xyz="0 0 0.1034"
+        tcp_rpy="0 0 0"
+        safety_distance="0.03"
+        with_sc="false"
+        ros2_control="false"
+        robot_ip=""
+        use_fake_hardware="false"
+        fake_sensor_commands="false"
+        gazebo_effort="false"
+        no_prefix="false"
+        arm_prefix=""
+        description_pkg="franka_description"
+    />
+
+    <!-- Robot pedestal -->
+    <link name="pedestal_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/visual/pedestal.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="pedestal_gray">
+          <color rgba="0.25 0.25 0.25 1.0"/>
+        </material>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/collision/pedestal.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+      </inertial>
+    </link>
+
+    <!-- Welding torch -->
+    <link name="torch_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/visual/torch.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="torch_gray">
+          <color rgba="0.25 0.25 0.25 1.0"/>
+        </material>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/collision/torch.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+      </inertial>
+    </link>
+
+    <!-- Welding table -->
+    <link name="welding_table_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/visual/welding_table.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="table_gray">
+          <color rgba="0.25 0.25 0.25 1.0"/>
+        </material>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/collision/welding_table.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+      </inertial>
+    </link>
+
+    <!-- Welding beam -->
+    <link name="beam_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/visual/beam.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="beam_gray">
+          <color rgba="0.5 0.5 0.5 1.0"/>
+        </material>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://welding_robot_description/meshes/collision/beam.stl"
+              scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+      </inertial>
+    </link>
+
+    <!-- Mount pedestal to world -->
+    <joint name="world_to_pedestal" type="fixed">
+      <parent link="world"/>
+      <child link="pedestal_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Mount robot base to pedestal -->
+    <joint name="pedestal_to_base" type="fixed">
+      <parent link="pedestal_link"/>
+      <child link="base"/>
+      <origin xyz="0.045 0 0.408885" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Attach welding table to world -->
+    <joint name="welding_table_to_world" type="fixed">
+      <parent link="world"/>
+      <child link="welding_table_link"/>
+      <origin xyz="0.9 0.0 0.0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Attach beam to welding table -->
+    <joint name="beam_to_welding_table" type="fixed">
+      <parent link="welding_table_link"/>
+      <child link="beam_link"/>
+      <origin xyz="0 0.0 0.5" rpy="0 0 ${radians(-90)}"/>
+    </joint>
+
+    <!-- Transitive endpoint link -->
+    <link name="endpoint"/>
+    <joint name="endpoint_joint" type="fixed">
+      <parent link="fr3_link8"/>
+      <child link="endpoint"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 ${radians(225)}"/>
+    </joint>
+
+    <!-- Attach torch to endpoint link -->
+    <joint name="torch_mount_joint" type="fixed">
+      <parent link="endpoint"/>
+      <child link="torch_link"/>
+      <origin xyz="-0.03 -0.03 0.0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- TCP at torch tip -->
+    <link name="welding_tcp"/>
+    <joint name="welding_tcp_joint" type="fixed">
+      <parent link="torch_link"/>
+      <child link="welding_tcp"/>
+      <origin xyz="0.031 0.03 0.329" rpy="${radians(50)} 0 0"/>
+    </joint>
+
+    <xacro:if value="${add_ros2_control}">
+      <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
+
+      <ros2_control name="WeldingRobotSystem" type="system">
+        <hardware>
+          <xacro:if value="${ros2_control_hardware_type == 'mock_components'}">
+            <plugin>mock_components/GenericSystem</plugin>
+          </xacro:if>
+          <xacro:if value="${ros2_control_hardware_type == 'isaac'}">
+            <plugin>topic_based_ros2_control/TopicBasedSystem</plugin>
+            <param name="joint_commands_topic">/isaac_joint_commands</param>
+            <param name="joint_states_topic">/isaac_joint_states</param>
+          </xacro:if>
+        </hardware>
+
+        <joint name="fr3_joint1">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${initial_positions['fr3_joint1']}</param>
+          </state_interface>
+          <state_interface name="velocity">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+        </joint>
+        <joint name="fr3_joint2">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${initial_positions['fr3_joint2']}</param>
+          </state_interface>
+          <state_interface name="velocity">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+        </joint>
+        <joint name="fr3_joint3">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${initial_positions['fr3_joint3']}</param>
+          </state_interface>
+          <state_interface name="velocity">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+        </joint>
+        <joint name="fr3_joint4">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${initial_positions['fr3_joint4']}</param>
+          </state_interface>
+          <state_interface name="velocity">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+        </joint>
+        <joint name="fr3_joint5">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${initial_positions['fr3_joint5']}</param>
+          </state_interface>
+          <state_interface name="velocity">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+        </joint>
+        <joint name="fr3_joint6">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${initial_positions['fr3_joint6']}</param>
+          </state_interface>
+          <state_interface name="velocity">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+        </joint>
+        <joint name="fr3_joint7">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${initial_positions['fr3_joint7']}</param>
+          </state_interface>
+          <state_interface name="velocity">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+        </joint>
+      </ros2_control>
+    </xacro:if>
+  </xacro:macro>
+</robot>
