@@ -1,0 +1,201 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="welding_robot">
+
+    <!-- Reusable Franka macro -->
+    <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
+
+    <!-- Optional fixed world frame -->
+    <link name="world"/>
+
+    <!-- Instantiate FR3 without gripper -->
+    <xacro:franka_robot
+        robot_type="fr3"
+        joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"
+        inertials="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}"
+        kinematics="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}"
+        accelerometer_config="${xacro.load_yaml('$(find franka_description)/robots/fr3/accelerometers.yaml')}"
+        dynamics="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}"
+        gazebo="false"
+        hand="false"
+        ee_id="franka_hand"
+        special_connection=""
+        xyz_ee="0 0 0"
+        rpy_ee="0 0 ${-pi/4}"
+        tcp_xyz="0 0 0.1034"
+        tcp_rpy="0 0 0"
+        safety_distance="0.03"
+        with_sc="false"
+        ros2_control="false"
+        robot_ip=""
+        use_fake_hardware="false"
+        fake_sensor_commands="false"
+        gazebo_effort="false"
+        no_prefix="false"
+        arm_prefix=""
+        description_pkg="franka_description"
+    />
+
+    <!-- Robot pedestal -->
+    <link name="pedestal_link">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/pedestal.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="pedestal_gray">
+            <color rgba="0.25 0.25 0.25 1.0"/>
+        </material>
+        </visual>
+
+        <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/pedestal.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        </collision>
+
+        <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+        </inertial>
+    </link>
+
+    <!-- Welding torch -->
+    <link name="torch_link">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/torch.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="torch_gray">
+            <color rgba="0.25 0.25 0.25 1.0"/>
+        </material>
+        </visual>
+
+        <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/torch.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        </collision>
+
+        <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+        </inertial>
+    </link>
+
+    <!-- Welding table -->
+    <link name="welding_table_link">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/welding_table.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="torch_gray">
+            <color rgba="0.25 0.25 0.25 1.0"/>
+        </material>
+        </visual>
+
+        <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/welding_table.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        </collision>
+
+        <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+        </inertial>
+    </link>
+
+    <!-- Welding beam -->
+    <link name="beam_link">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/beam.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="beam_custom">
+            <color rgba="0.5 0.5 0.5 1.0"/>
+        </material>
+        </visual>
+
+        <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://welding_robot_description/meshes/visual/beam.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        </collision>
+
+        <inertial>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                iyy="0.001" iyz="0.0"
+                izz="0.001"/>
+        </inertial>
+    </link>
+
+    <!-- Mount pedestal to world -->
+    <joint name="world_to_base" type="fixed">
+        <parent link="world"/>
+        <child link="pedestal_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Mount robot base to pedestal -->
+    <joint name="base_to_pedestal" type="fixed">
+        <parent link="pedestal_link"/>
+        <child link="base"/>
+        <origin xyz="0.045 0 0.408885" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Attach welding table to world -->
+    <joint name="welding_table_to_world" type="fixed">
+        <parent link="world"/>
+        <child link="welding_table_link"/>
+        <origin xyz="1.2 0.0 0.0" rpy="0 0 ${radians(0)}"/>
+    </joint>
+
+    <!-- Attach beam to welding table -->
+    <joint name="beam_to_welding_table" type="fixed">
+        <parent link="welding_table_link"/>
+        <child link="beam_link"/>
+        <origin xyz="0 0.0 0.5" rpy="0 0 ${radians(-90)}"/>
+    </joint>
+
+    <!-- Attach torch to flange -->
+    <joint name="torch_mount_joint" type="fixed">
+        <parent link="fr3_link8"/>
+        <child link="torch_link"/>
+        <origin xyz="-0.03 0.03 0.0" rpy="0 0 ${radians(-90)}"/>
+    </joint>
+
+    <!-- TCP at torch tip -->
+    <link name="welding_tcp"/>
+    <joint name="welding_tcp_joint" type="fixed">
+        <parent link="torch_link"/>
+        <child link="welding_tcp"/>
+        <origin xyz="0.031 0.03 0.329" rpy="${radians(50)} 0 0"/>
+    </joint>
+
+</robot>
