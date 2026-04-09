@@ -29,8 +29,6 @@
     <joint name="fr3_joint7" value="0.7853981633974483" />
   </group_state>
 
-  <end_effector name="welding_torch" parent_link="fr3_link8" group="welding_torch" />
-
   <disable_collisions link1="base" link2="pedestal_link" reason="Adjacent" />
   <disable_collisions link1="base" link2="fr3_link0" reason="Adjacent" />
   <disable_collisions link1="pedestal_link" link2="fr3_link0" reason="Never" />
