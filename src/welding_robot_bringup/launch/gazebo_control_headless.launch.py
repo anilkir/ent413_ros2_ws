@@ -24,15 +24,12 @@ def generate_launch_description():
     franka_share_root = os.path.join(get_package_prefix("franka_description"), "share")
 
     world = LaunchConfiguration("world")
-    qt_platform = LaunchConfiguration("qt_platform")
-    software_rendering = LaunchConfiguration("software_rendering")
     show_camera = LaunchConfiguration("show_camera")
     camera_topic = LaunchConfiguration("camera_topic")
 
     xacro_file = PathJoinSubstitution(
         [bringup_share, "urdf", "welding_robot_gazebo_control.xacro"]
     )
-    gui_config = PathJoinSubstitution([bringup_share, "config", "gazebo_gui.config"])
     default_world = PathJoinSubstitution(
         [bringup_share, "worlds", "welding_camera_demo.sdf"]
     )
@@ -48,14 +45,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([ros_gz_sim_share, "launch", "gz_sim.launch.py"])
         ),
-        launch_arguments={
-            "gz_args": [
-                world,
-                " --gui-config ",
-                gui_config,
-                " --render-engine-gui ogre -r",
-            ]
-        }.items(),
+        launch_arguments={"gz_args": [world, " -r -s --headless-rendering"]}.items(),
     )
 
     spawn_robot = Node(
@@ -82,36 +72,13 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("world", default_value=default_world),
-            DeclareLaunchArgument("qt_platform", default_value="xcb"),
-            DeclareLaunchArgument("software_rendering", default_value="true"),
             DeclareLaunchArgument("show_camera", default_value="false"),
             DeclareLaunchArgument("camera_topic", default_value="/overhead_camera/image_raw"),
-            SetEnvironmentVariable("QT_QPA_PLATFORM", qt_platform),
-            SetEnvironmentVariable(
-                "LIBGL_ALWAYS_SOFTWARE",
-                "1",
-                condition=IfCondition(software_rendering),
-            ),
-            SetEnvironmentVariable(
-                "QT_OPENGL",
-                "software",
-                condition=IfCondition(software_rendering),
-            ),
-            SetEnvironmentVariable(
-                "QT_QUICK_BACKEND",
-                "software",
-                condition=IfCondition(software_rendering),
-            ),
-            SetEnvironmentVariable(
-                "MESA_LOADER_DRIVER_OVERRIDE",
-                "llvmpipe",
-                condition=IfCondition(software_rendering),
-            ),
-            SetEnvironmentVariable(
-                "GALLIUM_DRIVER",
-                "llvmpipe",
-                condition=IfCondition(software_rendering),
-            ),
+            SetEnvironmentVariable("LIBGL_ALWAYS_SOFTWARE", "1"),
+            SetEnvironmentVariable("QT_OPENGL", "software"),
+            SetEnvironmentVariable("QT_QUICK_BACKEND", "software"),
+            SetEnvironmentVariable("MESA_LOADER_DRIVER_OVERRIDE", "llvmpipe"),
+            SetEnvironmentVariable("GALLIUM_DRIVER", "llvmpipe"),
             AppendEnvironmentVariable(
                 "GZ_SIM_RESOURCE_PATH",
                 [bringup_share_root, ":", description_share_root, ":", franka_share_root],
@@ -122,7 +89,7 @@ def generate_launch_description():
                 executable="robot_state_publisher",
                 name="robot_state_publisher",
                 output="screen",
-                parameters=[robot_description],
+                parameters=[robot_description, {"use_sim_time": True}],
             ),
             spawn_robot,
             RegisterEventHandler(

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>welding_robot_moveit_gazebo_config</name>
+  <version>0.1.0</version>
+  <description>
+    MoveIt launch and configuration package for driving the welding robot in Gazebo
+    through the Gazebo-backed ros2_control controllers.
+  </description>
+
+  <maintainer email="anil@example.com">Anil</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>franka_description</exec_depend>
+  <exec_depend>moveit_configs_utils</exec_depend>
+  <exec_depend>moveit_planners_ompl</exec_depend>
+  <exec_depend>moveit_ros_move_group</exec_depend>
+  <exec_depend>moveit_ros_visualization</exec_depend>
+  <exec_depend>moveit_simple_controller_manager</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>welding_robot_bringup</exec_depend>
+  <exec_depend>welding_robot_description</exec_depend>
+  <exec_depend>welding_robot_moveit_config</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
