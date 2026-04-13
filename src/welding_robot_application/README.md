@@ -1,143 +1,299 @@
 # welding_robot_application
 
-This package is the application-side package for classroom demos around the welding robot. It currently focuses on two things:
+Application-side package for the welding robot lab. This package provides:
 
-- visualizing toolpaths stored in CSV files
-- publishing fixed environment frames from a single YAML file
+- toolpath visualization in RViz
+- fixed environment frame publication
+- a synthetic camera stream for perception demos
+- toolpath planning and execution through MoveIt
 
-## Main Parts
+## Package structure
 
-- `welding_robot_application/path_visualizer.py`
-  Reads a toolpath CSV and publishes RViz displays.
-  Topics:
+### Nodes
+
+- `path_visualizer`
+  Loads a CSV toolpath from `paths/` and publishes:
   `/toolpath_pose_array` as `geometry_msgs/PoseArray`
   `/toolpath_markers` as `visualization_msgs/MarkerArray`
 
-- `welding_robot_application/frame_manager.py`
-  Publishes all static TF frames defined in `config/frames.yaml` using `StaticTransformBroadcaster`.
+- `frame_manager`
+  Loads `config/frames.yaml` and publishes all configured static transforms with `StaticTransformBroadcaster`.
+
+- `fake_camera_publisher`
+  Publishes a synthetic overhead camera stream for demos:
+  `/overhead_camera/image_raw`
+  `/overhead_camera/camera_info`
+  `/overhead_camera/fov_marker`
+
+- `toolpath_executor`
+  Loads a selected toolpath, chooses reachable yaw orientations when needed, moves to the first seam point, computes a Cartesian path through the rest of the seam, executes it, and then returns the robot to the `ready` posture.
+
+### Launch files
+
+- `application_demo.launch.py`
+  Starts your MoveIt demo together with the toolpath visualizer.
+
+- `path_visualizer.launch.py`
+  Starts only the path visualizer.
+
+- `frame_manager.launch.py`
+  Starts only the frame manager.
+
+- `toolpath_executor.launch.py`
+  Starts the seam executor.
+
+### Data files
 
 - `paths/`
-  Stores student-facing toolpath CSV files.
-  Example:
-  [beam_top_outer_right.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_top_outer_right.csv)
-  Additional seam files:
-  [beam_top_outer_left.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_top_outer_left.csv)
-  [beam_bottom_outer_right.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_bottom_outer_right.csv)
-  [beam_bottom_outer_left.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_bottom_outer_left.csv)
+  Student-facing seam CSVs.
 
 - `config/frames.yaml`
-  Stores fixed environment frames such as `industrial_base`, `workpiece_frame`, and `table_top_corner`.
-  File:
-  [frames.yaml](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/config/frames.yaml)
+  Static environment frames such as `industrial_base`, `table_top_corner`, and `workpiece_frame`.
 
-- `launch/application_demo.launch.py`
-  Starts your existing welding robot MoveIt demo and the CSV toolpath visualizer together.
+## Build and source
 
-- `launch/frame_manager.launch.py`
-  Starts only the static frame manager.
+From the workspace root:
 
-## CSV format
+```bash
+cd ~/ent413_ros2_ws
+source /opt/ros/jazzy/setup.bash
+colcon build --packages-select welding_robot_application
+source ~/ent413_ros2_ws/install/setup.bash
+```
 
-Use a header row with:
+If you update Python source, rebuild and re-source before testing again.
+
+## Toolpath CSV format
+
+Minimum format:
 
 ```text
 x,y,z
 ```
 
-or with optional orientation columns:
+Optional local orientation columns:
 
 ```text
 x,y,z,rx,ry,rz
 ```
 
-You can also use the aliases:
+Accepted aliases:
 
 ```text
 x,y,z,roll,pitch,yaw
 ```
 
-or:
-
 ```text
 x,y,z,a,b,c
 ```
 
-Units:
+Conventions:
 
-- `x, y, z` are meters.
-- `rx, ry, rz` are rotations about the reference frame `x, y, z` axes.
-- `a, b, c` are accepted as aliases for the same three rotations.
-- By default the angles are interpreted as radians.
-- Set the node parameter `angles_in_degrees:=true` if your CSV uses degrees.
+- `x, y, z` are in meters
+- `rx, ry, rz` are rotations about the local frame axes
+- `a, b, c` are treated as aliases for the same three rotations
+- angles are radians by default
+- set `angles_in_degrees:=true` if the file uses degrees
 
-If orientation columns are present, the visualizer publishes them in the `PoseArray` and also shows green arrow markers in RViz.
+Current toolpath files:
 
-## Toolpath Selection
+- [beam_top_outer_right.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_top_outer_right.csv)
+- [beam_top_outer_left.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_top_outer_left.csv)
+- [beam_bottom_outer_right.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_bottom_outer_right.csv)
+- [beam_bottom_outer_left.csv](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/paths/beam_bottom_outer_left.csv)
 
-The visualizer parameter is named `toolpath_name`.
+## Frame configuration
 
-It accepts either:
+The frame manager always loads:
 
-- `beam_top_outer_right`
-- `beam_top_outer_right.csv`
+- [frames.yaml](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/config/frames.yaml)
 
-Both resolve to the same file inside `paths/`.
-
-The default reference frame for the visualizer is now `table_top_corner`, so the beam seam CSV files are expressed relative to that frame rather than `world`.
-
-## Typical usage
-
-Start the application demo:
-
-```bash
-ros2 launch welding_robot_application application_demo.launch.py
-```
-
-Visualize a CSV path:
-
-```bash
-ros2 run welding_robot_application path_visualizer --ros-args -p toolpath_name:=beam_top_outer_right
-```
-
-Launch just the visualizer:
-
-```bash
-ros2 launch welding_robot_application path_visualizer.launch.py
-```
-
-If your CSV angles are in degrees:
-
-```bash
-ros2 run welding_robot_application path_visualizer --ros-args \
-  -p toolpath_name:=beam_top_outer_right \
-  -p angles_in_degrees:=true
-```
-
-You can also choose the toolpath from the combined launch file:
-
-```bash
-ros2 launch welding_robot_application application_demo.launch.py toolpath_name:=beam_top_outer_right
-```
-
-Publish multiple static frames from YAML:
+Use it with:
 
 ```bash
 ros2 run welding_robot_application frame_manager
 ```
 
-Or with the launch file:
+or:
 
 ```bash
 ros2 launch welding_robot_application frame_manager.launch.py
 ```
 
-The node always loads `share/welding_robot_application/config/frames.yaml`.
+## Visualization
 
-## RViz Setup
+Run the visualizer directly:
 
-For toolpath visualization, add either of these displays in RViz:
+```bash
+ros2 run welding_robot_application path_visualizer --ros-args \
+  -p toolpath_name:=beam_top_outer_right
+```
+
+Or via launch:
+
+```bash
+ros2 launch welding_robot_application path_visualizer.launch.py \
+  toolpath_name:=beam_top_outer_right
+```
+
+Useful parameters:
+
+- `toolpath_name`
+- `frame_id`
+- `angles_in_degrees`
+- `publish_rate_hz`
+- `point_scale`
+- `line_scale`
+
+For RViz, add:
 
 - `MarkerArray` on `/toolpath_markers`
 - `PoseArray` on `/toolpath_pose_array`
 
-`/toolpath_markers` is usually the more useful one because it shows both points and the connecting line.
+`/toolpath_markers` is usually the better display because it shows both points and the connecting line.
+
+## Fake camera demo
+
+Run directly:
+
+```bash
+ros2 run welding_robot_application fake_camera_publisher
+```
+
+Useful parameters:
+
+- `width`
+- `height`
+- `publish_rate`
+
+This is intended for classroom demos of image topics, camera info, and simple sensor visualization without needing a real camera.
+
+## Combined application demo
+
+This starts your MoveIt demo together with toolpath visualization:
+
+```bash
+ros2 launch welding_robot_application application_demo.launch.py \
+  toolpath_name:=beam_top_outer_right
+```
+
+Useful arguments:
+
+- `toolpath_name`
+- `toolpath_frame`
+- `angles_in_degrees`
+
+## Toolpath executor
+
+### What it does
+
+The executor is intended for seam-following rather than independent point-to-point planning.
+
+Default behavior:
+
+1. Load the selected CSV toolpath.
+2. If surface-normal mode is enabled, treat each waypoint frame `+Z` as the local surface normal.
+3. Align TCP `+Z` with waypoint-frame `-Z`.
+4. Sample yaw around the local `+Z` axis and use IK to choose a reachable low-cost yaw sequence across the seam.
+5. Move to the first seam waypoint.
+6. Compute one Cartesian path through the remaining seam waypoints.
+7. Execute that Cartesian trajectory.
+8. Return to the MoveIt `ready` posture.
+
+### Typical execution
+
+```bash
+ros2 launch welding_robot_application toolpath_executor.launch.py \
+  toolpath_name:=beam_top_outer_right \
+  toolpath_frame:=table_top_corner \
+  execute:=true
+```
+
+Plan only:
+
+```bash
+ros2 run welding_robot_application toolpath_executor --ros-args \
+  -p toolpath_name:=beam_top_outer_right \
+  -p planning_frame:=table_top_corner \
+  -p execute:=false
+```
+
+Disable the return-to-ready motion:
+
+```bash
+ros2 run welding_robot_application toolpath_executor --ros-args \
+  -p toolpath_name:=beam_top_outer_right \
+  -p return_to_ready:=false
+```
+
+### Important parameters
+
+- `toolpath_name`
+  Selected seam CSV.
+
+- `planning_frame`
+  Frame in which the CSV points are interpreted. The current default is `table_top_corner`.
+
+- `use_toolpath_surface_normal`
+  If `true`, the executor derives tool orientation from the toolpath frame or CSV local frame instead of using each CSV orientation as a fully fixed pose.
+
+- `search_reachable_yaw_sequence`
+  If `true`, the executor samples yaw candidates and picks a reachable low-joint-change sequence before Cartesian planning.
+
+- `yaw_sample_step_degrees`
+  Spacing between sampled yaw candidates. Default `30.0`.
+
+- `move_to_start_pose`
+  If `true`, use normal planning to reach the first seam point before Cartesian interpolation.
+
+- `cartesian_max_step`
+  Cartesian interpolation step size in meters. Smaller values can help if Cartesian path fraction is low.
+
+- `min_cartesian_fraction`
+  Minimum acceptable Cartesian completion fraction. Default `1.0`.
+
+- `avoid_collisions`
+  Keep collision checking enabled during IK and Cartesian path generation.
+
+- `execute`
+  If `false`, stop after planning instead of executing.
+
+- `return_to_ready`
+  If `true`, perform one final MoveIt motion back to the SRDF `ready` posture after the seam completes.
+
+### When to use CSV orientation columns
+
+Top seams can often work with position-only CSVs.
+
+Bottom seams currently rely on their stored local tilt in the CSV. In surface-normal mode, the executor now uses those local orientation columns as the seam frame, then samples yaw around that local frame's `+Z`.
+
+### Common failure modes
+
+- `No reachable yaw candidate found for waypoint 1`
+  The starting seam pose is not reachable for any sampled yaw, or the local seam tilt is wrong.
+
+- `Cartesian path only covered <fraction>`
+  The straight-line seam is only partially feasible. First try reducing `cartesian_max_step`.
+
+- Start move succeeds but the seam fails immediately
+  Usually indicates a poor seam yaw choice, a singularity, or a collision-constrained segment.
+
+## Recommended workflow for the lab
+
+1. Build and source the workspace.
+2. Start the MoveIt demo.
+3. Start `frame_manager` if your environment frames are needed.
+4. Run `path_visualizer` and verify the seam in RViz.
+5. Run `toolpath_executor` in `execute:=false` mode first if you are testing a new seam.
+6. Run again with `execute:=true` once the seam behavior looks correct.
+
+## Relevant files
+
+- [README.md](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/README.md)
+- [setup.py](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/setup.py)
+- [package.xml](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/package.xml)
+- [frames.yaml](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/config/frames.yaml)
+- [toolpath_executor.py](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/welding_robot_application/toolpath_executor.py)
+- [path_visualizer.py](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/welding_robot_application/path_visualizer.py)
+- [frame_manager.py](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/welding_robot_application/frame_manager.py)
+- [fake_camera_publisher.py](/home/anilkir/ent413_ros2_ws/src/welding_robot_application/welding_robot_application/fake_camera_publisher.py)

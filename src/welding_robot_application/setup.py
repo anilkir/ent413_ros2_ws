@@ -15,9 +15,9 @@ setup(
             "share/" + package_name + "/launch",
             [
                 "launch/application_demo.launch.py",
-                "launch/fake_camera_demo.launch.py",
                 "launch/frame_manager.launch.py",
                 "launch/path_visualizer.launch.py",
+                "launch/toolpath_executor.launch.py",
             ],
         ),
         (
@@ -43,6 +43,7 @@ setup(
             "fake_camera_publisher = welding_robot_application.fake_camera_publisher:main",
             "path_visualizer = welding_robot_application.path_visualizer:main",
             "frame_manager = welding_robot_application.frame_manager:main",
+            "toolpath_executor = welding_robot_application.toolpath_executor:main",
         ],
     },
 )
