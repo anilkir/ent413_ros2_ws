@@ -47,7 +47,10 @@ def generate_launch_description():
         output="screen",
         parameters=[
             moveit_config.to_dict(),
-            {"use_sim_time": use_sim_time},
+            {
+                "use_sim_time": use_sim_time,
+                "start_state_max_bounds_error": 0.05,
+            },
         ],
         arguments=["--ros-args", "--log-level", "info"],
     )

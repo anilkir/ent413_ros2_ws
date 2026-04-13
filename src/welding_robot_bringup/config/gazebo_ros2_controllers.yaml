@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 30
+    update_rate: 100
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -26,18 +26,18 @@ welding_robot_arm_controller:
       - position
       - velocity
 
-    state_publish_rate: 30.0
-    action_monitor_rate: 20.0
+    state_publish_rate: 100.0
+    action_monitor_rate: 50.0
     allow_partial_joints_goal: false
     open_loop_control: true
     allow_integration_in_goal_trajectories: true
     constraints:
-      stopped_velocity_tolerance: 0.05
-      goal_time: 0.5
-      fr3_joint1: {trajectory: 0.1, goal: 0.05}
-      fr3_joint2: {trajectory: 0.1, goal: 0.05}
-      fr3_joint3: {trajectory: 0.1, goal: 0.05}
-      fr3_joint4: {trajectory: 0.1, goal: 0.05}
-      fr3_joint5: {trajectory: 0.1, goal: 0.05}
-      fr3_joint6: {trajectory: 0.1, goal: 0.05}
-      fr3_joint7: {trajectory: 0.1, goal: 0.05}
+      stopped_velocity_tolerance: 0.2
+      goal_time: 5.0
+      fr3_joint1: {trajectory: 0.6, goal: 0.3}
+      fr3_joint2: {trajectory: 0.6, goal: 0.3}
+      fr3_joint3: {trajectory: 0.6, goal: 0.3}
+      fr3_joint4: {trajectory: 0.6, goal: 0.3}
+      fr3_joint5: {trajectory: 0.6, goal: 0.3}
+      fr3_joint6: {trajectory: 0.6, goal: 0.3}
+      fr3_joint7: {trajectory: 0.6, goal: 0.3}

@@ -206,6 +206,12 @@ Default behavior:
 ros2 launch welding_robot_application toolpath_executor.launch.py \
   toolpath_name:=beam_top_outer_right \
   toolpath_frame:=table_top_corner \
+  settle_after_start_sec:=2.0 \
+  wait_for_fresh_joint_state:=true \
+  joint_state_freshness_sec:=0.5 \
+  use_sim_time:=false \
+  max_velocity_scaling_factor:=0.4 \
+  max_acceleration_scaling_factor:=0.4 \
   execute:=true
 ```
 
@@ -246,6 +252,18 @@ ros2 run welding_robot_application toolpath_executor --ros-args \
 - `move_to_start_pose`
   If `true`, use normal planning to reach the first seam point before Cartesian interpolation.
 
+- `settle_after_start_sec`
+  Wait time after the start move and before the Cartesian request. This is mainly useful in the Gazebo pipeline, where controller execution and reported robot state can lag slightly.
+
+- `wait_for_fresh_joint_state`
+  If `true`, wait for a recent `/joint_states` message after the start move before requesting the Cartesian path.
+
+- `joint_state_freshness_sec`
+  Maximum allowed age of the most recent `/joint_states` update before starting Cartesian planning.
+
+- `use_sim_time`
+  Set this to `true` in the Gazebo pipeline.
+
 - `cartesian_max_step`
   Cartesian interpolation step size in meters. Smaller values can help if Cartesian path fraction is low.
 
@@ -260,6 +278,11 @@ ros2 run welding_robot_application toolpath_executor --ros-args \
 
 - `return_to_ready`
   If `true`, perform one final MoveIt motion back to the SRDF `ready` posture after the seam completes.
+
+- `max_velocity_scaling_factor`, `max_acceleration_scaling_factor`
+  Motion speed scaling passed into MoveIt. For example:
+  regular MoveIt at 30% of the current `0.4` default is `0.12`
+  Gazebo at 50% of the current `0.4` default is `0.2`
 
 ### When to use CSV orientation columns
 

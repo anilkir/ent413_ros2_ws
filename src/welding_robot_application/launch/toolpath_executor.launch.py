@@ -10,6 +10,12 @@ def generate_launch_description():
     use_toolpath_surface_normal = LaunchConfiguration("use_toolpath_surface_normal")
     angles_in_degrees = LaunchConfiguration("angles_in_degrees")
     execute = LaunchConfiguration("execute")
+    settle_after_start_sec = LaunchConfiguration("settle_after_start_sec")
+    wait_for_fresh_joint_state = LaunchConfiguration("wait_for_fresh_joint_state")
+    joint_state_freshness_sec = LaunchConfiguration("joint_state_freshness_sec")
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    max_velocity_scaling_factor = LaunchConfiguration("max_velocity_scaling_factor")
+    max_acceleration_scaling_factor = LaunchConfiguration("max_acceleration_scaling_factor")
 
     return LaunchDescription(
         [
@@ -18,6 +24,12 @@ def generate_launch_description():
             DeclareLaunchArgument("use_toolpath_surface_normal", default_value="true"),
             DeclareLaunchArgument("angles_in_degrees", default_value="false"),
             DeclareLaunchArgument("execute", default_value="true"),
+            DeclareLaunchArgument("settle_after_start_sec", default_value="2.0"),
+            DeclareLaunchArgument("wait_for_fresh_joint_state", default_value="true"),
+            DeclareLaunchArgument("joint_state_freshness_sec", default_value="0.5"),
+            DeclareLaunchArgument("use_sim_time", default_value="false"),
+            DeclareLaunchArgument("max_velocity_scaling_factor", default_value="0.4"),
+            DeclareLaunchArgument("max_acceleration_scaling_factor", default_value="0.4"),
             Node(
                 package="welding_robot_application",
                 executable="toolpath_executor",
@@ -29,6 +41,12 @@ def generate_launch_description():
                         "use_toolpath_surface_normal": use_toolpath_surface_normal,
                         "angles_in_degrees": angles_in_degrees,
                         "execute": execute,
+                        "settle_after_start_sec": settle_after_start_sec,
+                        "wait_for_fresh_joint_state": wait_for_fresh_joint_state,
+                        "joint_state_freshness_sec": joint_state_freshness_sec,
+                        "use_sim_time": use_sim_time,
+                        "max_velocity_scaling_factor": max_velocity_scaling_factor,
+                        "max_acceleration_scaling_factor": max_acceleration_scaling_factor,
                     }
                 ],
             ),

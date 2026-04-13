@@ -1,6 +1,7 @@
 import csv
 import math
 import os
+import time
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -21,6 +22,7 @@ from moveit_msgs.srv import GetPositionIK
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from sensor_msgs.msg import JointState
 from shape_msgs.msg import SolidPrimitive
 
 
@@ -87,6 +89,9 @@ class ToolpathExecutor(Node):
         self.declare_parameter("yaw_sample_step_degrees", 30.0)
         self.declare_parameter("ik_timeout_sec", 0.05)
         self.declare_parameter("move_to_start_pose", True)
+        self.declare_parameter("settle_after_start_sec", 0.0)
+        self.declare_parameter("wait_for_fresh_joint_state", True)
+        self.declare_parameter("joint_state_freshness_sec", 0.5)
         self.declare_parameter("angles_in_degrees", False)
         self.declare_parameter("default_rx", 0.0)
         self.declare_parameter("default_ry", 0.0)
@@ -95,8 +100,8 @@ class ToolpathExecutor(Node):
         self.declare_parameter("num_planning_attempts", 5)
         self.declare_parameter("pipeline_id", "ompl")
         self.declare_parameter("planner_id", "")
-        self.declare_parameter("max_velocity_scaling_factor", 0.1)
-        self.declare_parameter("max_acceleration_scaling_factor", 0.1)
+        self.declare_parameter("max_velocity_scaling_factor", 0.4)
+        self.declare_parameter("max_acceleration_scaling_factor", 0.4)
         self.declare_parameter("cartesian_max_step", 0.01)
         self.declare_parameter("jump_threshold", 0.0)
         self.declare_parameter("prismatic_jump_threshold", 0.0)
@@ -113,6 +118,14 @@ class ToolpathExecutor(Node):
         self._cartesian_path_client = self.create_client(GetCartesianPath, "compute_cartesian_path")
         self._execute_trajectory_client = ActionClient(self, ExecuteTrajectory, "execute_trajectory")
         self._ik_client = self.create_client(GetPositionIK, "compute_ik")
+        self._last_joint_state: Optional[JointState] = None
+        self._last_joint_state_wall_time = 0.0
+        self._joint_state_sub = self.create_subscription(
+            JointState,
+            "joint_states",
+            self._on_joint_state,
+            10,
+        )
         self._ready_joint_targets = {
             "fr3_joint1": 0.0,
             "fr3_joint2": -0.7853981633974483,
@@ -122,6 +135,10 @@ class ToolpathExecutor(Node):
             "fr3_joint6": 1.5707963267948966,
             "fr3_joint7": 0.7853981633974483,
         }
+
+    def _on_joint_state(self, msg: JointState) -> None:
+        self._last_joint_state = msg
+        self._last_joint_state_wall_time = time.monotonic()
 
     def resolve_csv_path(self) -> str:
         toolpath_name = self.get_parameter("toolpath_name").get_parameter_value().string_value
@@ -396,6 +413,19 @@ class ToolpathExecutor(Node):
         self.get_logger().info("Returned to ready joint posture")
         return True
 
+    def wait_for_state_sync(self, context: str) -> None:
+        settle_after_start_sec = self.get_parameter("settle_after_start_sec").value
+        wait_for_fresh_joint_state = self.get_parameter("wait_for_fresh_joint_state").get_parameter_value().bool_value
+
+        if settle_after_start_sec > 0.0:
+            self.get_logger().info(
+                f"Waiting {settle_after_start_sec:.2f}s for Gazebo/controller state to settle before {context}"
+            )
+            time.sleep(settle_after_start_sec)
+        if wait_for_fresh_joint_state:
+            self.get_logger().info(f"Waiting for a fresh joint state before {context}")
+            self.wait_for_fresh_joint_state()
+
     def make_cartesian_request(self, poses: List[Pose]) -> GetCartesianPath.Request:
         request = GetCartesianPath.Request()
         request.header.frame_id = self.get_parameter("planning_frame").get_parameter_value().string_value
@@ -490,8 +520,20 @@ class ToolpathExecutor(Node):
                 pose.orientation.z = qz
                 pose.orientation.w = qw
 
-                seed_state = None if index == 1 else candidate_layers[index - 2][0].state if candidate_layers[index - 2] else None
-                solution = self.solve_ik(pose, seed_state)
+                seed_states: List[Optional[RobotState]] = [None]
+                if index > 1 and candidate_layers[index - 2]:
+                    previous_layer = candidate_layers[index - 2]
+                    previous_sorted = sorted(
+                        previous_layer,
+                        key=lambda candidate: abs(wrap_to_pi(math.radians(candidate.yaw_deg - yaw_deg))),
+                    )
+                    seed_states = [candidate.state for candidate in previous_sorted]
+
+                solution = None
+                for seed_state in seed_states:
+                    solution = self.solve_ik(pose, seed_state)
+                    if solution is not None:
+                        break
                 if solution is not None:
                     layer.append(YawCandidate(yaw_deg=yaw_deg, pose=pose, state=solution))
 
@@ -573,6 +615,22 @@ class ToolpathExecutor(Node):
         self.get_logger().info("Cartesian trajectory executed successfully")
         return True
 
+    def wait_for_fresh_joint_state(self) -> bool:
+        freshness_sec = self.get_parameter("joint_state_freshness_sec").value
+        deadline = time.monotonic() + max(1.0, freshness_sec + 1.0)
+
+        while time.monotonic() < deadline:
+            rclpy.spin_once(self, timeout_sec=0.1)
+            if self._last_joint_state is None:
+                continue
+            age = time.monotonic() - self._last_joint_state_wall_time
+            if age <= freshness_sec:
+                self.get_logger().info(f"Fresh joint state received {age:.3f}s ago")
+                return True
+
+        self.get_logger().warn("Did not receive a fresh joint state before Cartesian planning")
+        return False
+
     def run(self) -> None:
         waypoints = self.load_waypoints()
         use_surface_normal = self.get_parameter("use_toolpath_surface_normal").get_parameter_value().bool_value
@@ -601,6 +659,7 @@ class ToolpathExecutor(Node):
             self.get_logger().info("Moving to first toolpath waypoint before Cartesian execution")
             if not self.move_to_start_pose(poses[0]):
                 return
+            self.wait_for_state_sync("Cartesian planning")
             cartesian_poses = poses[1:]
 
         if not cartesian_poses:
@@ -645,6 +704,7 @@ class ToolpathExecutor(Node):
         if self.execute_trajectory(response.solution):
             self.get_logger().info("Finished Cartesian toolpath execution")
             if self.get_parameter("return_to_ready").get_parameter_value().bool_value:
+                self.wait_for_state_sync("return-to-ready planning")
                 self.move_to_ready_pose()
 
 
