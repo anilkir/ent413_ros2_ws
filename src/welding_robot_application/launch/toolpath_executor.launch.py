@@ -27,7 +27,7 @@ def generate_launch_description():
             DeclareLaunchArgument("settle_after_start_sec", default_value="2.0"),
             DeclareLaunchArgument("wait_for_fresh_joint_state", default_value="true"),
             DeclareLaunchArgument("joint_state_freshness_sec", default_value="0.5"),
-            DeclareLaunchArgument("use_sim_time", default_value="false"),
+            DeclareLaunchArgument("use_sim_time", default_value="true"),
             DeclareLaunchArgument("max_velocity_scaling_factor", default_value="0.4"),
             DeclareLaunchArgument("max_acceleration_scaling_factor", default_value="0.4"),
             Node(

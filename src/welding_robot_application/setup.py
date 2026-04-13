@@ -14,10 +14,9 @@ setup(
         (
             "share/" + package_name + "/launch",
             [
-                "launch/application_demo.launch.py",
                 "launch/frame_manager.launch.py",
-                "launch/path_visualizer.launch.py",
-                "launch/toolpath_executor.launch.py",
+                # "launch/path_visualizer.launch.py",
+                # "launch/toolpath_executor.launch.py",
             ],
         ),
         (
@@ -35,15 +34,14 @@ setup(
     zip_safe=True,
     maintainer="anilkir",
     maintainer_email="anilkir@example.com",
-    description="Application package for CSV path planning and industrial base-frame publication.",
+    description="Application package for path planning and supporting tasks",
     license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "fake_camera_publisher = welding_robot_application.fake_camera_publisher:main",
-            "path_visualizer = welding_robot_application.path_visualizer:main",
+            # "path_visualizer = welding_robot_application.path_visualizer:main",
             "frame_manager = welding_robot_application.frame_manager:main",
-            "toolpath_executor = welding_robot_application.toolpath_executor:main",
+            # "toolpath_executor = welding_robot_application.toolpath_executor:main",
         ],
     },
 )

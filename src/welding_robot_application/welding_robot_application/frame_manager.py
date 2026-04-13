@@ -32,7 +32,7 @@ class FrameManager(Node):
 
         self._broadcaster = StaticTransformBroadcaster(self)
         self._transforms = self._load_transforms()
-        self._broadcaster.sendTransform(self._transforms)
+        # self._broadcaster.sendTransform(self._transforms)
 
         self.get_logger().info(f"Published {len(self._transforms)} static frame(s)")
         for transform in self._transforms:
@@ -90,18 +90,18 @@ class FrameManager(Node):
         return transform
 
     def _load_transforms(self) -> list[TransformStamped]:
-        data = self._load_yaml()
+        # data = self._load_yaml()
         transforms = [self._transform_from_config(frame) for frame in data["frames"]]
         if not transforms:
             raise ValueError("frames.yaml does not contain any frames")
         return transforms
 
 
-def main() -> None:
-    rclpy.init()
-    node = FrameManager()
-    try:
-        rclpy.spin(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+# def main() -> None:
+#     rclpy.init()
+    # node = FrameManager()
+    # try:
+    #     rclpy.spin(node)
+    # finally:
+    #     node.destroy_node()
+    #     rclpy.shutdown()

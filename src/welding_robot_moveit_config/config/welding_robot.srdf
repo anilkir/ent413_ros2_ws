@@ -19,7 +19,7 @@
     <joint name="fr3_joint7" value="0.7853981633974483" />
   </group_state>
 
-  <group_state name="extended" group="manipulator">
+  <!-- <group_state name="extended" group="manipulator">
     <joint name="fr3_joint1" value="0.0" />
     <joint name="fr3_joint2" value="0.0" />
     <joint name="fr3_joint3" value="0.0" />
@@ -27,7 +27,7 @@
     <joint name="fr3_joint5" value="0.0" />
     <joint name="fr3_joint6" value="1.5707963267948966" />
     <joint name="fr3_joint7" value="0.7853981633974483" />
-  </group_state>
+  </group_state> -->
 
   <disable_collisions link1="base" link2="pedestal_link" reason="Adjacent" />
   <disable_collisions link1="base" link2="fr3_link0" reason="Adjacent" />
@@ -55,7 +55,7 @@
   <disable_collisions link1="fr3_link6" link2="fr3_link7" reason="Adjacent" />
   <disable_collisions link1="fr3_link6" link2="fr3_link8" reason="Default" />
   <disable_collisions link1="fr3_link7" link2="fr3_link8" reason="Adjacent" />
-  <disable_collisions link1="fr3_link8" link2="torch_link" reason="Adjacent" />
-  <disable_collisions link1="torch_link" link2="welding_tcp" reason="Adjacent" />
-  <disable_collisions link1="beam_link" link2="welding_table_link" reason="Adjacent" />
+  <!-- <disable_collisions link1="fr3_link8" link2="torch_link" reason="Adjacent" /> -->
+  <!-- <disable_collisions link1="torch_link" link2="welding_tcp" reason="Adjacent" /> -->
+  <!-- <disable_collisions link1="beam_link" link2="welding_table_link" reason="Adjacent" /> -->
 </robot>

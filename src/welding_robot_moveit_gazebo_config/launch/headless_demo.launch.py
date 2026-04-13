@@ -13,22 +13,22 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration("use_rviz")
     rviz_config = LaunchConfiguration("rviz_config")
 
-    gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare("welding_robot_bringup"),
-                    "launch",
-                    "gazebo_control_headless.launch.py",
-                ]
-            )
-        ),
-        launch_arguments={
-            "world": world,
-            "show_camera": show_camera,
-            "camera_topic": camera_topic,
-        }.items(),
-    )
+    # gazebo_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         PathJoinSubstitution(
+    #             [
+    #                 FindPackageShare("welding_robot_bringup"),
+    #                 "launch",
+    #                 "gazebo_control_headless.launch.py",
+    #             ]
+    #         )
+    #     ),
+    #     launch_arguments={
+    #         "world": world,
+    #         "show_camera": show_camera,
+    #         "camera_topic": camera_topic,
+    #     }.items(),
+    # )
 
     moveit_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

@@ -41,12 +41,12 @@ def generate_launch_description():
         )
     }
 
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([ros_gz_sim_share, "launch", "gz_sim.launch.py"])
-        ),
-        launch_arguments={"gz_args": [world, " -r -s --headless-rendering"]}.items(),
-    )
+    # gazebo = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         PathJoinSubstitution([ros_gz_sim_share, "launch", "gz_sim.launch.py"])
+    #     ),
+    #     launch_arguments={"gz_args": [world, " -r -s --headless-rendering"]}.items(),
+    # )
 
     spawn_robot = Node(
         package="ros_gz_sim",
@@ -104,18 +104,18 @@ def generate_launch_description():
                     on_exit=[arm_controller_spawner],
                 )
             ),
-            Node(
-                package="ros_gz_bridge",
-                executable="parameter_bridge",
-                output="screen",
-                arguments=[
-                    "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-                    "/overhead_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
-                    "/overhead_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-                    "/ee_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
-                    "/ee_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-                ],
-            ),
+            # Node(
+            #     package="ros_gz_bridge",
+            #     executable="parameter_bridge",
+            #     output="screen",
+            #     arguments=[
+            #         "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+            #         "/overhead_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
+            #         "/overhead_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            #         "/ee_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
+            #         "/ee_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            #     ],
+            # ),
             Node(
                 package="image_tools",
                 executable="showimage",

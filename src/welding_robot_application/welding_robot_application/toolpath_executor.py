@@ -152,58 +152,58 @@ class ToolpathExecutor(Node):
             filename,
         )
 
-    def load_waypoints(self) -> List[Waypoint]:
-        path = self.resolve_csv_path()
-        waypoints: List[Waypoint] = []
+    # def load_waypoints(self) -> List[Waypoint]:
+    #     path = self.resolve_csv_path()
+    #     waypoints: List[Waypoint] = []
 
-        with open(path, newline="", encoding="utf-8") as csv_file:
-            sample = csv_file.read(1024)
-            csv_file.seek(0)
-            try:
-                has_header = csv.Sniffer().has_header(sample)
-            except csv.Error:
-                has_header = True
+    #     with open(path, newline="", encoding="utf-8") as csv_file:
+    #         sample = csv_file.read(1024)
+    #         csv_file.seek(0)
+    #         try:
+    #             has_header = csv.Sniffer().has_header(sample)
+    #         except csv.Error:
+    #             has_header = True
 
-            if has_header:
-                reader = csv.DictReader(csv_file)
-                for row in reader:
-                    if not row:
-                        continue
-                    normalized_row = {
-                        (key.strip().lower() if key is not None else key): value.strip()
-                        for key, value in row.items()
-                        if key is not None and value is not None
-                    }
-                    waypoints.append(
-                        Waypoint(
-                            x=float(normalized_row["x"]),
-                            y=float(normalized_row["y"]),
-                            z=float(normalized_row["z"]),
-                            rx=self._optional_angle(normalized_row, "rx", "roll", "a"),
-                            ry=self._optional_angle(normalized_row, "ry", "pitch", "b"),
-                            rz=self._optional_angle(normalized_row, "rz", "yaw", "c"),
-                        )
-                    )
-            else:
-                reader = csv.reader(csv_file)
-                for row in reader:
-                    if not row:
-                        continue
-                    if len(row) < 3:
-                        raise ValueError(f"Expected at least 3 columns, got {len(row)} in row {row}")
-                    values = [float(value) for value in row]
-                    waypoint = Waypoint(x=values[0], y=values[1], z=values[2])
-                    if len(values) >= 6:
-                        waypoint.rx = values[3]
-                        waypoint.ry = values[4]
-                        waypoint.rz = values[5]
-                    waypoints.append(waypoint)
+    #         if has_header:
+    #             reader = csv.DictReader(csv_file)
+    #             for row in reader:
+    #                 if not row:
+    #                     continue
+    #                 normalized_row = {
+    #                     (key.strip().lower() if key is not None else key): value.strip()
+    #                     for key, value in row.items()
+    #                     if key is not None and value is not None
+    #                 }
+    #                 waypoints.append(
+    #                     Waypoint(
+    #                         x=float(normalized_row["x"]),
+    #                         y=float(normalized_row["y"]),
+    #                         z=float(normalized_row["z"]),
+    #                         rx=self._optional_angle(normalized_row, "rx", "roll", "a"),
+    #                         ry=self._optional_angle(normalized_row, "ry", "pitch", "b"),
+    #                         rz=self._optional_angle(normalized_row, "rz", "yaw", "c"),
+    #                     )
+    #                 )
+    #         else:
+    #             reader = csv.reader(csv_file)
+    #             for row in reader:
+    #                 if not row:
+    #                     continue
+    #                 if len(row) < 3:
+    #                     raise ValueError(f"Expected at least 3 columns, got {len(row)} in row {row}")
+    #                 values = [float(value) for value in row]
+    #                 waypoint = Waypoint(x=values[0], y=values[1], z=values[2])
+    #                 if len(values) >= 6:
+    #                     waypoint.rx = values[3]
+    #                     waypoint.ry = values[4]
+    #                     waypoint.rz = values[5]
+    #                 waypoints.append(waypoint)
 
-        if not waypoints:
-            raise ValueError(f"No waypoints found in {path}")
+    #     if not waypoints:
+    #         raise ValueError(f"No waypoints found in {path}")
 
-        self.get_logger().info(f"Loaded {len(waypoints)} waypoint(s) from {path}")
-        return waypoints
+    #     self.get_logger().info(f"Loaded {len(waypoints)} waypoint(s) from {path}")
+    #     return waypoints
 
     @staticmethod
     def _optional_angle(row: dict[str, str], *keys: str) -> Optional[float]:
@@ -214,35 +214,33 @@ class ToolpathExecutor(Node):
                 break
         return float(value) if value not in (None, "") else None
 
-    def waypoint_pose(self, waypoint: Waypoint) -> Pose:
-        pose = Pose()
-        pose.position.x = waypoint.x
-        pose.position.y = waypoint.y
-        pose.position.z = waypoint.z
+    # def waypoint_pose(self, waypoint: Waypoint) -> Pose:
+    #     pose = Pose()
+    # TODO: Add the pose position population here
 
-        if self.get_parameter("use_toolpath_surface_normal").get_parameter_value().bool_value:
-            qx, qy, qz, qw = self.surface_normal_quaternion(waypoint, 0.0)
-            pose.orientation.x = qx
-            pose.orientation.y = qy
-            pose.orientation.z = qz
-            pose.orientation.w = qw
-            return pose
+    #     if self.get_parameter("use_toolpath_surface_normal").get_parameter_value().bool_value:
+    #         qx, qy, qz, qw = self.surface_normal_quaternion(waypoint, 0.0)
+    #         pose.orientation.x = qx
+    #         pose.orientation.y = qy
+    #         pose.orientation.z = qz
+    #         pose.orientation.w = qw
+    #         return pose
 
-        rx = waypoint.rx if waypoint.rx is not None else self.get_parameter("default_rx").value
-        ry = waypoint.ry if waypoint.ry is not None else self.get_parameter("default_ry").value
-        rz = waypoint.rz if waypoint.rz is not None else self.get_parameter("default_rz").value
+    #     rx = waypoint.rx if waypoint.rx is not None else self.get_parameter("default_rx").value
+    #     ry = waypoint.ry if waypoint.ry is not None else self.get_parameter("default_ry").value
+    #     rz = waypoint.rz if waypoint.rz is not None else self.get_parameter("default_rz").value
 
-        if self.get_parameter("angles_in_degrees").get_parameter_value().bool_value:
-            rx = math.radians(rx)
-            ry = math.radians(ry)
-            rz = math.radians(rz)
+    #     if self.get_parameter("angles_in_degrees").get_parameter_value().bool_value:
+    #         rx = math.radians(rx)
+    #         ry = math.radians(ry)
+    #         rz = math.radians(rz)
 
-        qx, qy, qz, qw = quaternion_from_rpy(rx, ry, rz)
-        pose.orientation.x = qx
-        pose.orientation.y = qy
-        pose.orientation.z = qz
-        pose.orientation.w = qw
-        return pose
+    #     qx, qy, qz, qw = quaternion_from_rpy(rx, ry, rz)
+    #     pose.orientation.x = qx
+    #     pose.orientation.y = qy
+    #     pose.orientation.z = qz
+    #     pose.orientation.w = qw
+    #     return pose
 
     def waypoint_base_quaternion(self, waypoint: Waypoint) -> tuple[float, float, float, float]:
         # If the CSV already provides a local frame tilt, use it as the seam frame.
@@ -353,35 +351,35 @@ class ToolpathExecutor(Node):
         request.planning_options.replan = False
         return request
 
-    def move_to_start_pose(self, pose: Pose) -> bool:
-        self.get_logger().info("Waiting for MoveIt move_action server for start pose move...")
-        self._move_group_client.wait_for_server()
+    # def move_to_start_pose(self, pose: Pose) -> bool:
+    #     self.get_logger().info("Waiting for MoveIt move_action server for start pose move...")
+    #     self._move_group_client.wait_for_server()
 
-        goal = self.make_move_group_goal(pose)
-        send_future = self._move_group_client.send_goal_async(goal)
-        rclpy.spin_until_future_complete(self, send_future)
-        goal_handle = send_future.result()
-        if goal_handle is None or not goal_handle.accepted:
-            self.get_logger().error("Start pose MoveGroup goal was rejected")
-            return False
+    #     goal = self.make_move_group_goal(pose)
+    #     send_future = self._move_group_client.send_goal_async(goal)
+    #     rclpy.spin_until_future_complete(self, send_future)
+    #     goal_handle = send_future.result()
+    #     if goal_handle is None or not goal_handle.accepted:
+    #         self.get_logger().error("Start pose MoveGroup goal was rejected")
+    #         return False
 
-        result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, result_future)
-        action_result = result_future.result()
-        if action_result is None:
-            self.get_logger().error("Start pose MoveGroup goal did not return a result")
-            return False
+    #     result_future = goal_handle.get_result_async()
+    #     rclpy.spin_until_future_complete(self, result_future)
+    #     action_result = result_future.result()
+    #     if action_result is None:
+    #         self.get_logger().error("Start pose MoveGroup goal did not return a result")
+    #         return False
 
-        result = action_result.result
-        if result.error_code.val != 1:
-            self.get_logger().error(
-                f"Failed to move to start pose with code {result.error_code.val}: "
-                f"{result.error_code.message}"
-            )
-            return False
+    #     result = action_result.result
+    #     if result.error_code.val != 1:
+    #         self.get_logger().error(
+    #             f"Failed to move to start pose with code {result.error_code.val}: "
+    #             f"{result.error_code.message}"
+    #         )
+    #         return False
 
-        self.get_logger().info("Reached toolpath start pose")
-        return True
+    #     self.get_logger().info("Reached toolpath start pose")
+    #     return True
 
     def move_to_ready_pose(self) -> bool:
         self.get_logger().info("Returning to ready joint posture")
@@ -632,6 +630,7 @@ class ToolpathExecutor(Node):
         return False
 
     def run(self) -> None:
+        # Get the waypoints from the toolpath file
         waypoints = self.load_waypoints()
         use_surface_normal = self.get_parameter("use_toolpath_surface_normal").get_parameter_value().bool_value
         search_reachable_yaw = self.get_parameter("search_reachable_yaw_sequence").get_parameter_value().bool_value
@@ -644,6 +643,8 @@ class ToolpathExecutor(Node):
                 return
         else:
             poses = [self.waypoint_pose(waypoint) for waypoint in waypoints]
+
+        # Move to the start posiiton of the toolpath
         move_to_start = self.get_parameter("move_to_start_pose").get_parameter_value().bool_value
 
         self.get_logger().info("Waiting for MoveIt compute_cartesian_path service...")
@@ -666,6 +667,7 @@ class ToolpathExecutor(Node):
             self.get_logger().info("Toolpath contains only the start pose; nothing left for Cartesian interpolation")
             return
 
+        # Compute the cartesian discretized path
         request = self.make_cartesian_request(cartesian_poses)
         self.get_logger().info(
             f"Requesting one Cartesian path through {len(cartesian_poses)} waypoint(s) with max_step="
@@ -701,10 +703,12 @@ class ToolpathExecutor(Node):
             self.get_logger().info("Execution disabled; stopping after Cartesian planning")
             return
 
+        # Execute the trajectory
         if self.execute_trajectory(response.solution):
             self.get_logger().info("Finished Cartesian toolpath execution")
             if self.get_parameter("return_to_ready").get_parameter_value().bool_value:
                 self.wait_for_state_sync("return-to-ready planning")
+                # Once trajectory has been executed, return to the "ready" pose
                 self.move_to_ready_pose()
 
 

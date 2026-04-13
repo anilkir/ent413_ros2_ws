@@ -50,13 +50,13 @@ def generate_launch_description():
     )
 
     # Start the actual move_group node/action server
-    move_group_node = Node(
-        package="moveit_ros_move_group",
-        executable="move_group",
-        output="screen",
-        parameters=[moveit_config.to_dict()],
-        arguments=["--ros-args", "--log-level", "info"],
-    )
+    # move_group_node = Node(
+    #     package="moveit_ros_move_group",
+    #     executable="move_group",
+    #     output="screen",
+    #     parameters=[moveit_config.to_dict()],
+    #     arguments=["--ros-args", "--log-level", "info"],
+    # )
 
     # RViz
     rviz_base = LaunchConfiguration("rviz_config")
@@ -93,15 +93,15 @@ def generate_launch_description():
         "config",
         "ros2_controllers.yaml",
     )
-    ros2_control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[ros2_controllers_path],
-        remappings=[
-            ("/controller_manager/robot_description", "/robot_description"),
-        ],
-        output="screen",
-    )
+    # ros2_control_node = Node(
+    #     package="controller_manager",
+    #     executable="ros2_control_node",
+    #     parameters=[ros2_controllers_path],
+    #     remappings=[
+    #         ("/controller_manager/robot_description", "/robot_description"),
+    #     ],
+    #     output="screen",
+    # )
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",

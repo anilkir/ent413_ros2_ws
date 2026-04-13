@@ -52,10 +52,10 @@ class PathVisualizer(Node):
         self.declare_parameter("arrow_head_diameter", 0.008)
         self.declare_parameter("angles_in_degrees", False)
 
-        self._pose_array_pub = self.create_publisher(PoseArray, "toolpath_pose_array", 10)
-        self._marker_array_pub = self.create_publisher(MarkerArray, "toolpath_markers", 10)
+        # self._pose_array_pub = self.create_publisher(PoseArray, "toolpath_pose_array", 10)
+        # self._marker_array_pub = self.create_publisher(MarkerArray, "toolpath_markers", 10)
 
-        self._waypoints = self.load_waypoints()
+        # self._waypoints = self.load_waypoints()
         self._publish_messages()
 
         period = 1.0 / self.get_parameter("publish_rate_hz").value
@@ -135,27 +135,27 @@ class PathVisualizer(Node):
                 break
         return float(value) if value not in (None, "") else None
 
-    def pose_from_waypoint(self, waypoint: Waypoint) -> Pose:
-        pose = Pose()
-        pose.position.x = waypoint.x
-        pose.position.y = waypoint.y
-        pose.position.z = waypoint.z
+    # def pose_from_waypoint(self, waypoint: Waypoint) -> Pose:
+    #     pose = Pose()
+    #     pose.position.x = waypoint.x
+    #     pose.position.y = waypoint.y
+    #     pose.position.z = waypoint.z
 
-        rx = waypoint.rx or 0.0
-        ry = waypoint.ry or 0.0
-        rz = waypoint.rz or 0.0
+    #     rx = waypoint.rx or 0.0
+    #     ry = waypoint.ry or 0.0
+    #     rz = waypoint.rz or 0.0
 
-        if self.get_parameter("angles_in_degrees").get_parameter_value().bool_value:
-            rx = math.radians(rx)
-            ry = math.radians(ry)
-            rz = math.radians(rz)
+    #     if self.get_parameter("angles_in_degrees").get_parameter_value().bool_value:
+    #         rx = math.radians(rx)
+    #         ry = math.radians(ry)
+    #         rz = math.radians(rz)
 
-        qx, qy, qz, qw = quaternion_from_rpy(rx, ry, rz)
-        pose.orientation.x = qx
-        pose.orientation.y = qy
-        pose.orientation.z = qz
-        pose.orientation.w = qw
-        return pose
+    #     qx, qy, qz, qw = quaternion_from_rpy(rx, ry, rz)
+    #     pose.orientation.x = qx
+    #     pose.orientation.y = qy
+    #     pose.orientation.z = qz
+    #     pose.orientation.w = qw
+    #     return pose
 
     def build_pose_array(self) -> PoseArray:
         msg = PoseArray()
@@ -203,7 +203,7 @@ class PathVisualizer(Node):
         line_marker.color = ColorRGBA(r=0.15, g=0.75, b=0.95, a=1.0)
 
         for waypoint in self._waypoints:
-            point = Point(x=waypoint.x, y=waypoint.y, z=waypoint.z)
+            # point = Point(x=waypoint.x, y=waypoint.y, z=waypoint.z)
             points_marker.points.append(point)
             line_marker.points.append(point)
 
@@ -235,11 +235,11 @@ class PathVisualizer(Node):
         self._marker_array_pub.publish(self.build_marker_array())
 
 
-def main() -> None:
-    rclpy.init()
-    node = PathVisualizer()
-    try:
-        rclpy.spin(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+# def main() -> None:
+#     rclpy.init()
+#     node = PathVisualizer()
+#     try:
+#         rclpy.spin(node)
+#     finally:
+#         node.destroy_node()
+#         rclpy.shutdown()

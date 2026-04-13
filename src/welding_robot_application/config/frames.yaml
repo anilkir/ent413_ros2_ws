@@ -1,16 +1,4 @@
 frames:
-  - parent_frame: world
-    child_frame: industrial_base
-    translation:
-      x: 0.9
-      y: 0.0
-      z: 0.0
-    rotation_rpy:
-      a: 0.0
-      b: 0.0
-      c: 0.0
-    angles_in_degrees: true
-
   - parent_frame: table_top_corner
     child_frame: workpiece_frame
     translation:
@@ -34,3 +22,6 @@ frames:
       b: 0.0
       c: 180
     angles_in_degrees: true
+
+  # Add the industrial_base frame here
+
